@@ -12,9 +12,15 @@ from core.cli import CliApp
 
 load_dotenv()
 
+# Fix socks:// -> socks5:// for httpx compatibility
+for _var in ("ALL_PROXY", "all_proxy"):
+    _val = os.environ.get(_var, "")
+    if _val.startswith("socks://"):
+        os.environ[_var] = _val.replace("socks://", "socks5://", 1)
+
 # Anthropic Config
-claude_model = os.getenv("CLAUDE_MODEL", "")
-anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
+claude_model = os.environ.get("CLAUDE_MODEL", "")
+anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
 
 
 assert claude_model, "Error: CLAUDE_MODEL cannot be empty. Update .env"
@@ -24,7 +30,9 @@ assert anthropic_api_key, (
 
 
 async def main():
-    claude_service = Claude(model=claude_model)
+    claude_service = Claude(
+        model=claude_model
+    )
 
     server_scripts = sys.argv[1:]
     clients = {}
